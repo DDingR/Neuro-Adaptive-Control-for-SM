@@ -41,10 +41,12 @@ classdef CtrlBSC < ParamSM_Lookup
         %% SYSTEM METHODS
         function psi = getPsi(obj, y)
             psi = getPsi@ParamSM_Lookup(obj, y(2:3));
+            psi = psi + ones(size(psi)) * 1e-3;
         end
 
         function L = getL(obj, y)
             L = getL@ParamSM_Lookup(obj, y(2:3));
+            L = L + ones(size(L)) * 1e-3;
         end
         
         function obj = getSys(obj, y)

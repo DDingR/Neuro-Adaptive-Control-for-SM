@@ -6,9 +6,9 @@ classdef NN_CoNAC < NN
 
     methods
         function obj = NN_CoNAC()
-            NN_size = [3, 8,2];   
-            alpha = 1e+4;
-            rho = alpha*1e-2;
+            NN_size = [3, 16,16,2];   
+            alpha = 10e+2;
+            rho = alpha*1e-1;
 
             obj = obj@NN(NN_size, alpha, rho);
 

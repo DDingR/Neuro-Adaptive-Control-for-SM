@@ -14,13 +14,13 @@ u0 = [0;0];
 env = EnvSM(x0, u0, dt);
 
 %% REFERENCE
-ref = @(t) 1*heaviside(t-0.1);
+ref = @(t) 10*heaviside(t-0.1);
 % ref = @(t) sin(t)*0.2;
 
 %% CONTROLLER
 % ctrl = CtrlPID(50, 20, 0, ctrl_dt);
-ctrl = CtrlBSC(10, 150, ref(0), ctrl_dt);
-% ctrl = CtrlNAC_BSC(10, 150, ref(0), ctrl_dt);
+% ctrl = CtrlBSC(5, 15, ref(0), ctrl_dt);
+ctrl = CtrlNAC_BSC(5, 15, ref(0), ctrl_dt);
 
 %% RECORDER
 rec = RecSM(x0, env.getOutput(), ref(0), dt, rpt_dt);
