@@ -1,4 +1,4 @@
-classdef CtrlBSC < ParamSM_Linear
+classdef CtrlBSC < ParamSM_Lookup
     properties (Access = public)
         k1 (1,1) double {mustBeNumeric}
         K2 (2,2) double {mustBeNumeric}
@@ -18,7 +18,7 @@ classdef CtrlBSC < ParamSM_Linear
 
     methods
         function obj = CtrlBSC(k1, k2, r, ctrl_dt)
-            obj@ParamSM_Linear();
+            obj@ParamSM_Lookup();
 
             obj.k1 = k1;
             obj.K2 = k2 * eye(2);
@@ -40,16 +40,18 @@ classdef CtrlBSC < ParamSM_Linear
 
         %% SYSTEM METHODS
         function psi = getPsi(obj, y)
-            psi = getPsi@ParamSM_Linear(obj, y(2:3));
+            psi = getPsi@ParamSM_Lookup(obj, y(2:3));
         end
 
-        function inv_L = getInvL(obj)
-            inv_L = getInvL@ParamSM_Linear(obj);
+        function L = getL(obj, y)
+            L = getL@ParamSM_Lookup(obj, y(2:3));
         end
-
+        
         function obj = getSys(obj, y)
             psi = obj.getPsi(y);
-            inv_L = obj.getInvL();
+            L = obj.getL(y);
+
+            inv_L = matInv22(L);
 
             obj.f1 = (2*obj.np)/(3*obj.kappa^2*obj.Theta)*psi'*obj.J';
             obj.f2 = inv_L * (-obj.R * y(2:3) - y(1)/obj.np*obj.J*psi);
@@ -77,7 +79,9 @@ classdef CtrlBSC < ParamSM_Linear
             obj = obj.preControl(y, r);
             e = y - [r; obj.r2];
 
-            u = obj.L * ( ...
+            L = obj.getL(y);
+
+            u = L * ( ...
                 -obj.K2 * e(2:3) - obj.f2 - e(1)*obj.f1' + obj.rd2 ... 
             );
             
@@ -87,4 +91,14 @@ classdef CtrlBSC < ParamSM_Linear
         end
 
     end
+end
+
+function inv_M = matInv22(M)
+    det = M(1,1)*M(2,2) - M(1,2)*M(2,1);
+    assert(det ~= 0, 'Matrix is singular and cannot be inverted')
+
+    inv_M = (1/det) * [
+        +M(2,2), -M(1,2); 
+        -M(2,1), +M(1,1)
+    ];
 end

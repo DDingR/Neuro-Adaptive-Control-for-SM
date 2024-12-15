@@ -1,4 +1,4 @@
-classdef EnvSM_Linear < ParamSM_Linear
+classdef EnvSM < ParamSM_Lookup
 
     properties (Access = public)
         x (3,1) double {mustBeNumeric}      % State of the system
@@ -13,8 +13,8 @@ classdef EnvSM_Linear < ParamSM_Linear
     end
 
     methods
-        function obj = EnvSM_Linear(init_x, init_u, sampling_time)
-            obj = obj@ParamSM_Linear();
+        function obj = EnvSM(init_x, init_u, sampling_time)
+            obj = obj@ParamSM_Lookup();
 
             assert(length(init_x) == 3, 'State must have 3 elements')
             assert(length(init_u) == 2, 'Input must have 2 elements')
@@ -34,7 +34,7 @@ classdef EnvSM_Linear < ParamSM_Linear
             fprintf('Torque: [%.2f]\n', obj.trq)
             fprintf('Sampling Time: %.2f\n', obj.dt)
             fprintf('\n')
-            obj.disp@ParamSM_Linear();
+            obj.disp@ParamSM_Lookup();
         end
 
         %% GET METHODS
@@ -50,16 +50,12 @@ classdef EnvSM_Linear < ParamSM_Linear
         end
 
         %% SYSTEM METHODS
-        function obj = renewPsiAndL(obj)
-            obj = renewPsiAndL@ParamSM_Linear(obj, obj.x(2:3));
+        function L = getL(obj, current)
+            L = getL@ParamSM_Lookup(obj, current);
         end
 
-        function inv_L = getInvL(obj)
-            inv_L = getInvL@ParamSM_Linear(obj);
-        end
-
-        function psi = getPsi(obj)
-            psi = getPsi@ParamSM_Linear(obj, obj.x(2:3));
+        function psi = getPsi(obj, current)
+            psi = getPsi@ParamSM_Lookup(obj, current);
         end
 
         function trq_l = getLowTorque(obj)
@@ -67,15 +63,17 @@ classdef EnvSM_Linear < ParamSM_Linear
         end
 
         function [obj, grad] = getGrad(obj)
-            obj = obj.renewPsiAndL();
-            psi = obj.getPsi();
+            current = obj.x(2:3);
 
-            obj.trq = (2*obj.np)/(3*obj.kappa^2) * obj.x(2:3)'*obj.J*psi;
+            psi = obj.getPsi(current);
+            L = obj.getL(current);
+
+            obj.trq = (2*obj.np)/(3*obj.kappa^2) * current'*obj.J*psi;
             trq_l = obj.getLowTorque();
             grad_1 = 1/obj.Theta * (obj.trq - trq_l);   
 
-            inv_L = obj.getInvL();
-            grad_2 = inv_L * (-obj.R*obj.x(2:3) - obj.x(1)/obj.np*obj.J*psi + obj.u);
+            inv_L = matInv22(L);
+            grad_2 = inv_L * (-obj.R*current - obj.x(1)/obj.np*obj.J*psi + obj.u);
 
             grad = [grad_1; grad_2];
         end
@@ -91,4 +89,14 @@ classdef EnvSM_Linear < ParamSM_Linear
         end
 
     end
+end
+
+function inv_M = matInv22(M)
+    det = M(1,1)*M(2,2) - M(1,2)*M(2,1);
+    assert(det ~= 0, 'Matrix is singular and cannot be inverted')
+
+    inv_M = (1/det) * [
+        +M(2,2), -M(1,2); 
+        -M(2,1), +M(1,1)
+    ];
 end

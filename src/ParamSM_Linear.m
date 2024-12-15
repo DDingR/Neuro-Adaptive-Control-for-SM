@@ -42,19 +42,8 @@ classdef ParamSM_Linear
             psi = obj.L * current + obj.bias_psi;
         end
 
-        function obj = renewPsiAndL(obj, current)
-            % if we have mapping from current to psi, we can use this function
-            return
-        end
-
-        function inv_L = getInvL(obj)
-            det_L = obj.L(1,1)*obj.L(2,2) - obj.L(1,2)*obj.L(2,1);
-            assert(det_L ~= 0, 'Matrix is singular and cannot be inverted')
-
-            inv_L = (1/det_L) * [
-                +obj.L(2,2), -obj.L(1,2); 
-                -obj.L(2,1), +obj.L(1,1)
-            ];
+        function L = getL(obj, current)
+            return;
         end
     end
 end

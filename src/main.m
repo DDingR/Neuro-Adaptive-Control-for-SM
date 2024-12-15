@@ -11,10 +11,10 @@ t = 0:dt:T;
 x0 = [0; 0; 0];
 u0 = [0;0];
 
-env = EnvSM_Linear(x0, u0, dt);
+env = EnvSM(x0, u0, dt);
 
 %% REFERENCE
-ref = @(t) 0.2*heaviside(t-0.1);
+ref = @(t) 1*heaviside(t-0.1);
 % ref = @(t) sin(t)*0.2;
 
 %% CONTROLLER
