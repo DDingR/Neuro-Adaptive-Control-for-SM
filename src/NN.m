@@ -14,14 +14,17 @@ classdef NN
         
         act_func % activation function
         e_tol = 0;
+
+        dt 
     end
 
     methods
-        function obj = NN(NN_size, alpha, rho)
+        function obj = NN(NN_size, alpha, rho, dt)
             obj.NN_size = NN_size;
             obj.alpha = alpha;
             obj.rho = rho;
-            
+            obj.dt = dt;
+
             init_range = 1e-3;
             obj.act_func = "tanh";
 
@@ -119,7 +122,7 @@ classdef NN
 
             V_grad =  - obj.alpha * -nnGrad' * e;
             V_grad = V_grad - obj.rho * norm(e) * obj.V;
-            V_grad = V_grad * 1/5e3;
+            V_grad = V_grad * obj.dt;
 
             obj.V = obj.V + V_grad;
 

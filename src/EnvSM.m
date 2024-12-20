@@ -13,8 +13,9 @@ classdef EnvSM < ParamSM_Lookup
     end
 
     methods
-        function obj = EnvSM(init_x, init_u, sampling_time)
-            obj = obj@ParamSM_Lookup();
+        function obj = EnvSM(init_x, init_u, sampling_time, data_path)
+            
+            obj = obj@ParamSM_Lookup(data_path);
 
             assert(length(init_x) == 3, 'State must have 3 elements')
             assert(length(init_u) == 2, 'Input must have 2 elements')

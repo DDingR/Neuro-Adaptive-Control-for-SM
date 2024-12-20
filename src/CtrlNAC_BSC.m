@@ -19,7 +19,7 @@ classdef CtrlNAC_BSC < ParamSM_Lookup & NN_CoNAC
     methods
         function obj = CtrlNAC_BSC(k1, k2, r, ctrl_dt)
             obj@ParamSM_Lookup();
-            obj@NN_CoNAC();
+            obj@NN_CoNAC(ctrl_dt);
 
             obj.k1 = k1;
             obj.K2 = k2 * eye(2);
@@ -74,10 +74,10 @@ classdef CtrlNAC_BSC < ParamSM_Lookup & NN_CoNAC
             obj.rd2 = [0;0]; % not implemented
         end
 
-        function obj = postControl(obj, y, r, e)
+        function obj = postControl(obj, y, r, e, u)
             obj.pre_r = r;
 
-            obj = postControl@NN_CoNAC(obj, e(2:3));
+            obj = postControl@NN_CoNAC(obj, e(2:3), u);
         end
 
         function [obj, u] = getControl(obj, y, r)
@@ -85,14 +85,10 @@ classdef CtrlNAC_BSC < ParamSM_Lookup & NN_CoNAC
             e = y - [r; obj.r2];
 
             u = -1 * getControl@NN_CoNAC(obj, e);
-
-            % u = obj.L * ( ...
-            %     -obj.K2 * e(2:3) - obj.f2 - e(1)*obj.f1' + obj.rd2 ... 
-            % );
             
-            % assert(~isnan(norm(u)), 'Control signal is NaN')
+            assert(~isnan(norm(u)), 'Control signal is NaN')
 
-            obj = obj.postControl(y, r, e);
+            obj = obj.postControl(y, r, e, u);
         end
 
     end
