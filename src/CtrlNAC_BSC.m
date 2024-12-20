@@ -1,4 +1,4 @@
-classdef CtrlNAC_BSC < ParamSM_Linear & NN_CoNAC
+classdef CtrlNAC_BSC < ParamSM_Lookup & NN_CoNAC
     properties (Access = public)
         k1 (1,1) double {mustBeNumeric}
         K2 (2,2) double {mustBeNumeric}
@@ -18,8 +18,8 @@ classdef CtrlNAC_BSC < ParamSM_Linear & NN_CoNAC
 
     methods
         function obj = CtrlNAC_BSC(k1, k2, r, ctrl_dt)
-            obj@ParamSM_Linear();
-            obj@NN_CoNAC();
+            obj@ParamSM_Lookup();
+            obj@NN_CoNAC(ctrl_dt);
 
             obj.k1 = k1;
             obj.K2 = k2 * eye(2);
@@ -41,16 +41,20 @@ classdef CtrlNAC_BSC < ParamSM_Linear & NN_CoNAC
 
         %% SYSTEM METHODS
         function psi = getPsi(obj, y)
-            psi = getPsi@ParamSM_Linear(obj, y(2:3));
+            psi = getPsi@ParamSM_Lookup(obj, y(2:3));
+            psi = psi + ones(size(psi)) * 1e-3;
         end
 
-        function inv_L = getInvL(obj)
-            inv_L = getInvL@ParamSM_Linear(obj);
+        function L = getL(obj, y)
+            L = getL@ParamSM_Lookup(obj, y(2:3));
+            L = L + ones(size(L)) * 1e-3;
         end
-
+        
         function obj = getSys(obj, y)
             psi = obj.getPsi(y);
-            inv_L = obj.getInvL();
+            L = obj.getL(y);
+
+            inv_L = matInv22(L);
 
             obj.f1 = (2*obj.np)/(3*obj.kappa^2*obj.Theta)*psi'*obj.J';
             obj.f2 = inv_L * (-obj.R * y(2:3) - y(1)/obj.np*obj.J*psi);
@@ -70,10 +74,10 @@ classdef CtrlNAC_BSC < ParamSM_Linear & NN_CoNAC
             obj.rd2 = [0;0]; % not implemented
         end
 
-        function obj = postControl(obj, y, r, e)
+        function obj = postControl(obj, y, r, e, u)
             obj.pre_r = r;
 
-            obj = postControl@NN_CoNAC(obj, e(2:3));
+            obj = postControl@NN_CoNAC(obj, e(2:3), u);
         end
 
         function [obj, u] = getControl(obj, y, r)
@@ -81,15 +85,21 @@ classdef CtrlNAC_BSC < ParamSM_Linear & NN_CoNAC
             e = y - [r; obj.r2];
 
             u = -1 * getControl@NN_CoNAC(obj, e);
-
-            % u = obj.L * ( ...
-            %     -obj.K2 * e(2:3) - obj.f2 - e(1)*obj.f1' + obj.rd2 ... 
-            % );
             
-            % assert(~isnan(norm(u)), 'Control signal is NaN')
+            assert(~isnan(norm(u)), 'Control signal is NaN')
 
-            obj = obj.postControl(y, r, e);
+            obj = obj.postControl(y, r, e, u);
         end
 
     end
+end
+
+function inv_M = matInv22(M)
+    det = M(1,1)*M(2,2) - M(1,2)*M(2,1);
+    assert(det ~= 0, 'Matrix is singular and cannot be inverted')
+
+    inv_M = (1/det) * [
+        +M(2,2), -M(1,2); 
+        -M(2,1), +M(1,1)
+    ];
 end

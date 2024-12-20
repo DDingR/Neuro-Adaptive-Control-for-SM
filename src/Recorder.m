@@ -15,11 +15,11 @@ classdef Recorder
     end
 
     methods
-        function obj = Recorder(x0, y0, r0, dt, rpt_dt, font_size, line_width, label_font_size)
-            obj.x_hist = x0;
-            obj.y_hist = y0;
+        function obj = Recorder(dt, rpt_dt, font_size, line_width, label_font_size)
+            obj.x_hist = [];
+            obj.y_hist = [];
             obj.u_hist = [];
-            obj.r_hist = r0;
+            obj.r_hist = [];
 
             obj.t_idx = 1;
             obj.dt = dt;
@@ -63,6 +63,7 @@ classdef Recorder
         end
 
         function obj = record(obj, hist, ref)
+
             obj.x_hist = [obj.x_hist, hist.x];
             obj.y_hist = [obj.y_hist, hist.y];
             obj.u_hist = [obj.u_hist, hist.u];
@@ -81,6 +82,19 @@ classdef Recorder
         %% PLOT METHODS
         function per_plot(obj, hist, color, line_style, name, x_name, y_name)
             plot(obj.dt*((1:size(hist,2))-1), hist(1,:), ...
+                'Color', color, ...
+                'LineWidth', obj.line_width, ...
+                'LineStyle', line_style, ...
+                'DisplayName', name ...
+                );  hold on;
+            grid on; 
+
+            xlabel(x_name, 'Interpreter', 'latex', 'FontSize', obj.label_font_size);
+            ylabel(y_name, 'Interpreter', 'latex', 'FontSize', obj.label_font_size);
+        end
+
+        function per_log_plot(obj, hist, color, line_style, name, x_name, y_name)
+            semilogy(obj.dt*((1:size(hist,2))-1), hist(1,:), ...
                 'Color', color, ...
                 'LineWidth', obj.line_width, ...
                 'LineStyle', line_style, ...
