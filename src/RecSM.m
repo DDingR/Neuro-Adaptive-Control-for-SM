@@ -37,7 +37,7 @@ classdef RecSM < Recorder
             
             weight_norm = obj.getWeightNorm(ctrl);
             obj.V_hist = [obj.V_hist, weight_norm];           
-
+            
             obj.L_hist = [obj.L_hist, ctrl.Lambda];
 
             obj.report();
